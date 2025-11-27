@@ -1,0 +1,60 @@
+name: Deploy Application Docker Image to GCP Artifact Registry and run Container on GCP GKE
+
+on:
+  push:
+    branches: [main]
+
+
+jobs:
+  format-check:
+    name: Check Code Formatting with Black
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Black
+        run: pip install black
+
+      - name: Run Black check
+        run: black --check --verbose .
+
+  Continuous-Integration:
+    name: Build and Push Docker Image
+    needs: format-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        env:
+          REGION: ${{ secrets.GCP_REGION }}
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          IMAGE_URI: ${{ secrets.GCP_IMAGE_URI }}
+
+        run: |
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT

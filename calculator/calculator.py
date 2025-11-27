@@ -1,5 +1,6 @@
 import math
 
+
 class ScientificCalculator:
     def __init__(self) -> None:
         pass
@@ -47,5 +48,5 @@ class ScientificCalculator:
 
     def factorial(self, num: float) -> int:
         if num < 0 or not num.is_integer():
-             raise ValueError("Factorial only defined for non-negative integers")
+            raise ValueError("Factorial only defined for non-negative integers")
         return math.factorial(int(num))

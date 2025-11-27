@@ -134,11 +134,14 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 st.markdown('<h1 class="stTitle">Scientific Calculator</h1>', unsafe_allow_html=True)
-st.markdown('<h3 class="stSubheader1">Advanced Mathematical Operations</h3>', unsafe_allow_html=True)
+st.markdown(
+    '<h3 class="stSubheader1">Advanced Mathematical Operations</h3>',
+    unsafe_allow_html=True,
+)
 
 calc = ScientificCalculator()
 
@@ -149,31 +152,47 @@ with st.sidebar:
     operation = st.radio(
         "Choose Function",
         [
-            "Add (+)", "Subtract (-)", "Multiply (x)", "Divide (÷)", 
-            "Power (x^y)", "Square Root (√x)", 
-            "Logarithm (log10)", "Natural Log (ln)", 
-            "Sin (Degrees)", "Cos (Degrees)", "Tan (Degrees)", "Factorial (x!)"
+            "Add (+)",
+            "Subtract (-)",
+            "Multiply (x)",
+            "Divide (÷)",
+            "Power (x^y)",
+            "Square Root (√x)",
+            "Logarithm (log10)",
+            "Natural Log (ln)",
+            "Sin (Degrees)",
+            "Cos (Degrees)",
+            "Tan (Degrees)",
+            "Factorial (x!)",
         ],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
 # Main Area for Inputs and Results
 st.markdown('<h4 class="stSubheader2">Inputs</h4>', unsafe_allow_html=True)
 
 # Determine if we need one or two inputs
-requires_two_inputs = operation in ["Add (+)", "Subtract (-)", "Multiply (x)", "Divide (÷)", "Power (x^y)"]
+requires_two_inputs = operation in [
+    "Add (+)",
+    "Subtract (-)",
+    "Multiply (x)",
+    "Divide (÷)",
+    "Power (x^y)",
+]
 
 num1 = st.number_input("Enter first number (x)", value=0.0, step=1.0, format="%.4f")
 
 num2 = 0.0
 if requires_two_inputs:
-    num2 = st.number_input("Enter second number (y)", value=0.0, step=1.0, format="%.4f")
+    num2 = st.number_input(
+        "Enter second number (y)", value=0.0, step=1.0, format="%.4f"
+    )
 
-st.markdown("###") # Spacer
+st.markdown("###")  # Spacer
 if st.button("Calculate Result"):
     result = None
     error = None
-    
+
     try:
         if operation == "Add (+)":
             result = calc.add(num1, num2)
@@ -203,9 +222,16 @@ if st.button("Calculate Result"):
         error = str(e)
 
     if error:
-        st.markdown(f'<div class="stError">Error: {error}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="stError">Error: {error}</div>', unsafe_allow_html=True
+        )
     elif result is not None:
-        st.markdown(f'<div class="stSuccess">{round(result, 4)}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="stSuccess">{round(result, 4)}</div>', unsafe_allow_html=True
+        )
 
 st.markdown("---")
-st.markdown("<div style='text-align: center; color: #aaa; font-size: 0.8rem;'>© 2025 Scientific Calculator App</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div style='text-align: center; color: #aaa; font-size: 0.8rem;'>© 2025 Scientific Calculator App</div>",
+    unsafe_allow_html=True,
+)
