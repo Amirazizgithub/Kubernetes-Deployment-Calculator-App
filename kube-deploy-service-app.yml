@@ -21,7 +21,7 @@ spec:
       containers:
       - name: calculator-app
         # Run this image
-        image: amirweaddo/calculator_app:v1
+        image: ${{ secrets.GCP_IMAGE_URI }}
         ports:
         - containerPort: 8501
 
