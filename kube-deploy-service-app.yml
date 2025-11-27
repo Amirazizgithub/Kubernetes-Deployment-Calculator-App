@@ -21,7 +21,7 @@ spec:
       containers:
       - name: calculator-app
         # Run this image
-        image: ${{ secrets.GCP_IMAGE_URI }}
+        image: us-central1-docker.pkg.dev/toturial-gcp/calculator-app/calculator-app:latest
         ports:
         - containerPort: 8501
 

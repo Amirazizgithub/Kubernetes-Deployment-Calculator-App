@@ -75,13 +75,16 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'gke-gcloud-auth-plugin'
 
       - name: Deploy to GKE
         env:
           REGION: ${{ secrets.GCP_REGION }}
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           IMAGE_URI: ${{ secrets.GCP_IMAGE_URI }}
+          CLUSTER_NAME: ${{ secrets.GCP_CLUSTER_NAME }}
         run: |
-          gcloud container clusters get-credentials ${{ secrets.GCP_CLUSTER_NAME }} --region $REGION
+          gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION
           kubectl apply -f kube-deploy-service-app.yml
           kubectl set image deployment calculator-app calculator-app=$IMAGE_URI
