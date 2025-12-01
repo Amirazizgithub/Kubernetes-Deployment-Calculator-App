@@ -1,3 +1,4 @@
+# --- Deployment Resource ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +7,7 @@ metadata:
   labels:
     app: calculator-app
 spec:
-  # 3 Pods should exist at all times.
+  # The initial number of Pods. HPA will manage this dynamically (min: 2, max: 5).
   replicas: 2
   selector:
     matchLabels:
@@ -14,8 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        # Apply this label to pods and default
-        # the Deployment label selector to this value
+        # Apply this label to pods
         app: calculator-app
     spec:
       containers:
@@ -24,9 +24,19 @@ spec:
         image: us-central1-docker.pkg.dev/toturial-gcp/calculator-app/calculator-app:latest
         ports:
         - containerPort: 8501
+        # VPA will overwrite these resource requests/limits, but they are
+        # required for HPA's initial operation and calculation.
+        resources:
+          requests:
+            cpu: "200m" # HPA target is 80% of this value
+            memory: "128Mi" # VPA will optimize this based on usage
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
 
 ---
 
+# --- Service Resource ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -42,12 +52,70 @@ spec:
       targetPort: 8501
       protocol: TCP
   selector:
-    # Loadbalance traffic across Pods matching
-    # this label selector
+    # Loadbalance traffic across Pods matching this label selector
     app: calculator-app
   # Define how the Service is exposed
-  # Create an HA proxy in the cloud provider
-  # with an External IP address - *Only supported
-  # by some cloud providers*
   type: LoadBalancer
   externalTrafficPolicy: Local
+  
+---
+
+# --- Vertical Pod Autoscaler (VPA) Resource ---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: calculator-app-vpa
+spec:
+  # Reference to the Deployment that the VPA will optimize (UP/DOWN)
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: calculator-app
+  updatePolicy:
+    # Set to 'Auto' to automatically update the Pods' resource requests/limits.
+    # Note: VPA changes require the Pod to be recreated, which happens automatically
+    # when updateMode is set to 'Auto' (VPA uses a controller to handle this).
+    updateMode: Auto
+  resourcePolicy:
+    # Define policies for containers managed by the VPA
+    containerPolicies:
+      - containerName: '*' # Apply to all containers in the Pod
+        # The VPA will manage both CPU and Memory requests/limits for optimal sizing.
+        # This addresses your rule about increasing specifications based on average requests.
+        # VPA learns over time and makes precise recommendations.
+        minAllowed:
+          cpu: 100m
+          memory: 50Mi
+        maxAllowed:
+          cpu: 1000m # 1 CPU core max
+          memory: 1Gi  # 1 Gigabyte max
+
+---
+
+# --- Horizontal Pod Autoscaler (HPA) Resource ---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: calculator-app-hpa
+spec:
+  # Reference to the Deployment that the HPA will scale (OUT/IN)
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: calculator-app
+  # Minimum number of replicas
+  minReplicas: 2
+  # Maximum number of replicas
+  maxReplicas: 5
+  metrics:
+    # 1. Metric: Scale based on average CPU utilization
+    # HPA will scale OUT (add pods) when CPU usage is high.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          # Target 80% average CPU utilization across all Pods
+          type: Utilization
+          averageUtilization: 80
+
+          

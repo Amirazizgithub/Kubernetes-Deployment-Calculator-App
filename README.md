@@ -36,7 +36,7 @@ graph TD
 ## 📂 Project Structure
 
 ```text
-.
+Kubernetes-Deployment-Calculator-App
 ├── calculator/                 # Application logic package
 │   ├── __init__.py
 │   └── calculator.py           # Calculator class implementation
